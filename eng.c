@@ -28,5 +28,9 @@ int read_fd(int fd) {
   if (bytes <= 0)
     return -1;
   buf[bytes] = '\0';
-  return atoi(buf);
+  char *endptr;
+  long val = strtol(buf, &endptr, 10);
+  if (buf == endptr)
+    return -1;
+  return (int)val;
 }

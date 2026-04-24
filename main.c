@@ -1,5 +1,7 @@
 #include "analyze.h"
+#include "conf.h"
 #include "eng.h"
+#include "stats.h"
 #include "structs.h"
 #include <dirent.h>
 #include <fcntl.h>
@@ -10,7 +12,13 @@
 #include <unistd.h>
 
 volatile sig_atomic_t running = 1;
-void handle_sig(int sig) { running = 0; }
+volatile sig_atomic_t reload_config = 0;
+void handle_sig(int sig) {
+  if (sig == SIGHUP)
+    reload_config = 1;
+  else if (sig == SIGINT || sig == SIGTERM)
+    running = 0;
+}
 
 char gpu_path[256] = "";
 char bat_path[256] = "";
@@ -42,10 +50,11 @@ void discover_paths() {
     while ((dir = readdir(d)) != NULL) {
       if (dir->d_name[0] == '.')
         continue;
-      if (strstr(dir->d_name, "AC") || strstr(dir->d_name, "ADP"))
+      if ((strstr(dir->d_name, "AC") ||
+          strstr(dir->d_name, "ADP")) && ac_path[0] == '\0')
         snprintf(ac_path, sizeof(ac_path), "/sys/class/power_supply/%s/online",
                  dir->d_name);
-      if (strstr(dir->d_name, "BAT"))
+      if (strstr(dir->d_name, "BAT") && bat_path[0] == '\0')
         snprintf(bat_path, sizeof(bat_path),
                  "/sys/class/power_supply/%s/capacity", dir->d_name);
     }
@@ -94,14 +103,29 @@ void init_data() {
 }
 
 int main() {
+  signal(SIGHUP, handle_sig);
   signal(SIGTERM, handle_sig);
   signal(SIGINT, handle_sig);
+  load_conf();
   discover_paths();
   struct timespec ts = {.tv_sec = 2, .tv_nsec = 0};
+  for (int i = 0; i < 5; i++) {
+    init_data();
+  }
   while (running == 1) {
+    if (reload_config) {
+      load_conf();
+      reload_config = 0;
+    }
     init_data();
     analyze();
+    write_stats();
     nanosleep(&ts, NULL);
   }
+  close(gpu_temp_fd);
+  close(ac_fd);
+  close(power_fd);
+  close(battery_fd);
+  remove(STATS_PATH);
   return 0;
 }

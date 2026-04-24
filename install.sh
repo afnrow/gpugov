@@ -24,4 +24,8 @@ make install
 systemctl enable gpugov.service
 systemctl start gpugov.service
 
-echo "Done! You can check status with: systemctl status gpugov"
+sudo touch /etc/gpugov.conf
+if [ ! -f /etc/gpugov.conf ]; then
+    echo -e "temp_critical=85.0\nbat_critical=20" > /etc/gpugov.conf
+fi
+chmod 644 /etc/gpugov.conf

@@ -1,6 +1,6 @@
 CC = clang
 CFLAGS = -O3 -march=native -Wall -s -ffast-math -flto=thin
-SRCS = main.c eng.c analyze.c
+SRCS = main.c eng.c analyze.c stats.c conf.c
 PREFIX = /usr/local/
 TARGET = gpugov
 

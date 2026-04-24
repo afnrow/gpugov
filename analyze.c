@@ -1,9 +1,6 @@
 #include "structs.h"
 #include "eng.h"
-
-#define TEMP_CRITICAL 85.0
-#define TEMP_SPIKE 5.0
-#define BAT_CRITICAL 20
+#include "conf.h"
 
 void analyze() {
   static enum GOVERNOR current_state;
@@ -15,15 +12,16 @@ void analyze() {
   }
   float avg_temp = sum_temp / 5.0;
   float thermal_velocity = history[newest_idx].temp - history[oldest_idx].temp;
+  float current_slope = history[newest_idx].temp - history[oldest_idx].temp;
   enum GOVERNOR next_state;
-  if (avg_temp > TEMP_CRITICAL) {
+  if (avg_temp > temp_critical) {
     next_state = LOW;
-  } else if (thermal_velocity > TEMP_SPIKE && avg_temp > 70.0) {
+  } else if (current_slope > thermal_velocity && avg_temp > temp_critical) {
     next_state = AUTO;
   } else if (history[newest_idx].ac == 1) {
     next_state = HIGH;
   } else {
-    if (history[newest_idx].bat < BAT_CRITICAL) {
+    if (history[newest_idx].bat < bat_critical) {
       next_state = LOW;
     } else {
       next_state = AUTO;
