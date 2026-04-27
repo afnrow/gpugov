@@ -24,6 +24,7 @@ char gpu_path[256] = "";
 char bat_path[256] = "";
 char ac_path[256] = "";
 char temp_path[256] = "";
+char governor[16] = "";
 
 int power_fd = -1;
 int ac_fd = -1;
@@ -122,6 +123,7 @@ int main() {
     write_stats();
     nanosleep(&ts, NULL);
   }
+  cleanup_stats();
   close(gpu_temp_fd);
   close(ac_fd);
   close(power_fd);

@@ -7,17 +7,21 @@
 #include <unistd.h>
 
 void set_governor(char *level) {
-  if (power_fd < 0) {
-    char full_path[512];
-    snprintf(full_path, sizeof(full_path),
-             "%s/power_dpm_force_performance_level", gpu_path);
-    power_fd = open(full_path, O_WRONLY);
+  if (strcmp(level, governor) != 0) {
     if (power_fd < 0) {
-      perror("Failed to open GPU control file");
-      return;
+      char full_path[512];
+      snprintf(full_path, sizeof(full_path),
+               "%s/power_dpm_force_performance_level", gpu_path);
+      power_fd = open(full_path, O_WRONLY);
+      if (power_fd < 0) {
+        perror("Failed to open GPU control file");
+        return;
+      }
     }
+    pwrite(power_fd, level, strlen(level), 0);
+    strncpy(governor, level, sizeof(governor) - 1);
+    governor[sizeof(governor) - 1] = '\0';
   }
-  pwrite(power_fd, level, strlen(level), 0);
 }
 
 int read_fd(int fd) {

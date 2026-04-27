@@ -8,4 +8,6 @@
 void set_governor(char* level);
 int read_fd(int fd);
 
+extern char governor[16];
+
 #endif
