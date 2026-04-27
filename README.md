@@ -16,3 +16,5 @@ sudo ./install.sh
 ```bash
 make clean
 ```
+## TODO
+- **Fix the python gui and transition to slint rust**
